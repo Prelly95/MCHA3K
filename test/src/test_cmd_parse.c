@@ -19,7 +19,7 @@ TEST(CmdParse, ParseNull)
     char str_actual[80];
 
     iospy_hook_out();
-    cmd_parse(NULL);
+    cmd_parse(0, NULL);
     rewind(stdout);
     fgets(str_actual,sizeof(str_actual),iospy_get_fp_out());
     iospy_unhook_out();
@@ -29,11 +29,14 @@ TEST(CmdParse, ParseNull)
 
 TEST(CmdParse, ParseEmpty)
 {
-    char cmd[] = "";
+    const char *argv;
+    int argc = 0;
     char str_actual[80];
 
+    argv = "";
+
     iospy_hook_out();
-    cmd_parse(cmd);
+    cmd_parse(argc, &argv);
     rewind(stdout);
     char * s = fgets(str_actual,sizeof(str_actual),iospy_get_fp_out());
     int is_eof = feof(iospy_get_fp_out());
@@ -45,11 +48,14 @@ TEST(CmdParse, ParseEmpty)
 
 TEST(CmdParse, ParseUnknown)
 {
-    char cmd[] = "not a known command string";
+    const char *argv;
+    int argc = 0;
     char str_actual[80];
 
+    argv = "not a known command string";
+
     iospy_hook_out();
-    cmd_parse(cmd);
+    cmd_parse(argc, &argv);
     iospy_pop_out_str(str_actual, sizeof(str_actual)/sizeof(str_actual[0]));
     // rewind(stdout);
     // fgets(str_actual,sizeof(str_actual),iospy_get_fp_out());
@@ -57,26 +63,29 @@ TEST(CmdParse, ParseUnknown)
 
     char str_expected[1024];
     const char * fmt = "Unknown command: \"%s\"\n";
-    snprintf(str_expected, sizeof(str_expected), fmt, cmd);
+    snprintf(str_expected, sizeof(str_expected), fmt, argv);
     TEST_ASSERT_EQUAL_STRING(str_expected,str_actual);
 }
 
 TEST(CmdParse, ParseUnknownTwice)
 {
-    char cmd[] = "not a known command string";
+    const char *argv;
+    int argc = 0;
+    argv = "not a known command string";
+
     char str_actual1[80];
     char str_actual2[80];
 
     iospy_hook_out();
-    cmd_parse(cmd);
+    cmd_parse(argc, &argv);
     iospy_pop_out_str(str_actual1, sizeof(str_actual1)/sizeof(str_actual1[0]));
-    cmd_parse(cmd);
+    cmd_parse(argc, &argv);
     iospy_pop_out_str(str_actual2, sizeof(str_actual2)/sizeof(str_actual2[0]));
     iospy_unhook_out();
 
     char str_expected[1024];
     const char * fmt = "Unknown command: \"%s\"\n";
-    snprintf(str_expected, sizeof(str_expected), fmt, cmd);
+    snprintf(str_expected, sizeof(str_expected), fmt, argv);
     TEST_ASSERT_EQUAL_STRING(str_expected, str_actual1);
     TEST_ASSERT_EQUAL_STRING(str_expected, str_actual2);
 }

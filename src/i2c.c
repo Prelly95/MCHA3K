@@ -8,32 +8,21 @@
 
 #define F_SCL 400000UL // SCL frequency
 #define Prescaler 1
-#define I2C_TIMER_DELAY 0xFF;
 #define TWBR_val ((((F_CPU / F_SCL) / Prescaler) - 16 ) / 2)//formula from data sheet
 
 void I2C_Init(void)
 {
-	TWSR = 0x00;
 	TWBR = (uint8_t)TWBR_val;
-	TWCR = (1<<TWEN);
 }
 
 uint8_t I2C_Start(uint8_t address)
 {
-	uint8_t i2c_timer = I2C_TIMER_DELAY;
 	// reset TWI control register
 	TWCR = 0;
 	// transmit START condition
 	TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN);
 	// wait for end of transmission
-	while(!(TWCR & (1<<TWINT)) && i2c_timer--)
-	{
-		if(i2c_timer == 0)
-		{
-			return 1;
-		}
-	}
-
+	while( !(TWCR & (1<<TWINT)));
 
 	// check if the start condition was successfully transmitted
 	if((TWSR & 0xF8) != TW_START)
@@ -62,19 +51,12 @@ uint8_t I2C_Start(uint8_t address)
 
 uint8_t I2C_Write(uint8_t data)
 {
-	uint8_t i2c_timer = I2C_TIMER_DELAY;
 	// load data into data register
 	TWDR = data;
 	// start transmission of data
 	TWCR = (1<<TWINT) | (1<<TWEN);
 	// wait for end of transmission
-	while(!(TWCR & (1<<TWINT)) && i2c_timer--)
-	{
-		if(i2c_timer == 0)
-		{
-			return 1;
-		}
-	}
+	while( !(TWCR & (1<<TWINT)));
 
 	if( (TWSR & 0xF8) != TW_MT_DATA_ACK )
 	{
@@ -87,34 +69,22 @@ uint8_t I2C_Write(uint8_t data)
 
 uint8_t I2C_Read_Ack(void)
 {
-	uint8_t i2c_timer = I2C_TIMER_DELAY;
+
 	// start TWI module and acknowledge data after reception
 	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWEA);
 	// wait for end of transmission
-	while(!(TWCR & (1<<TWINT)) && i2c_timer--)
-	{
-		if(i2c_timer == 0)
-		{
-			return 1;
-		}
-	}
+	while( !(TWCR & (1<<TWINT)) );
 	// return received data from TWDR
 	return TWDR;
 }
 
 uint8_t I2C_Read_Nack(void)
 {
-	uint8_t i2c_timer = I2C_TIMER_DELAY;
+
 	// start receiving without acknowledging reception
 	TWCR = (1<<TWINT) | (1<<TWEN);
 	// wait for end of transmission
-	while(!(TWCR & (1<<TWINT)) && i2c_timer--)
-	{
-		if(i2c_timer == 0)
-		{
-			return 1;
-		}
-	}
+	while( !(TWCR & (1<<TWINT)) );
 	// return received data from TWDR
 	return TWDR;
 }

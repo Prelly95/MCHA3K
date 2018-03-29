@@ -17,7 +17,7 @@ F_CPU = 14745600
 
 UNITY_ROOT = ../Unity
 
-TARGET_BASE = lab4
+TARGET_BASE = fix_tests
 TARGET_ELF = bin/$(TARGET_BASE).elf
 TARGET_HEX = bin/$(TARGET_BASE).hex
 
@@ -73,13 +73,13 @@ MATH_LIB = -lm
 LDFLAGS_AVR = $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 
 SRC_COMMON = \
-	src/led.c \
-	src/encoder.c \
-	src/potentiometer.c \
 	src/circ_buffer.c \
 	src/cmd_line_buffer.c \
 	src/cmd_parser.c \
-	src/controller.c
+	src/controller.c \
+	src/motor.c \
+	src/i2c.c \
+	src/oled.c
 
 SRC_TEST = \
 	$(UNITY_ROOT)/src/unity.c \
@@ -88,27 +88,24 @@ SRC_TEST = \
 	mock/avr/mock_sfr.c \
 	test/src/iospy.c \
 	test/src/all_tests.c \
-	test/src/test_led.c \
-	test/src/test_encoder.c \
-	test/src/test_potentiometer.c \
 	test/src/test_circ_buffer.c \
 	test/src/test_cmd_line_buffer.c \
 	test/src/test_iospy.c \
 	test/src/test_cmd_parse.c \
 	test/src/test_cmd_process.c \
-	test/src/test_cmd_led.c \
-	test/src/test_cmd_enc.c \
-	test/src/test_cmd_pot.c \
-	test/src/test_cmd_xy.c \
 	test/src/test_controller.c \
 	test/src/test_cmd_controller.c
 
 SRC_AVR = \
 	$(SRC_COMMON) \
 	src/main.c \
-	src/encoder_isr.c \
 	src/uart_isr.c \
-	src/uart.c
+	src/uart.c \
+	src/mpu6050.c \
+	src/motor_isr.c \
+	src/control_loop.c\
+	src/control_loop_isr.c \
+	src/kalman.c \
 
 INC_COMMON = \
 	-Isrc
@@ -124,12 +121,7 @@ INC_AVR = \
 
 SYMBOLS =
 
-MISC_TEST = -DUNITY_FLOAT_PRECISION=0.0001f
-ifeq ($(LD_WRAP),true)
-	MISC_TEST += -Wl,-wrap,cmd_parse
-else
-	MISC_TEST += -DNO_LD_WRAP
-endif
+DTREXE = ../../dtr.exe
 
 all: clean default
 
@@ -155,4 +147,11 @@ clean_avr:
 clean: clean_test clean_avr
 
 program: clean default
+	- ./$(DTREXE) COM4 HIGH 10
+	- ./$(DTREXE) COM4 LOW 10
 	avrdude -p atmega32 -c avr109 -P COM4 -b 115200 -u -U flash:w:$(TARGET_HEX)
+
+build: clean
+	avr-gcc -g -Os -mmcu=atmega32 $(CFLAGS) $(INC_AVR) $(SRC_AVR) -o $(TARGET_ELF) $(LDFLAGS_AVR)
+	avr-size $(TARGET_ELF)
+	avr-objcopy -j .text -j .data -O ihex $(TARGET_ELF) $(TARGET_HEX)

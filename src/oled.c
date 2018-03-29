@@ -1,17 +1,20 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
+
 #include <avr/io.h>
 #include <util/twi.h>
 #include <avr/pgmspace.h>
+#include <avr/eeprom.h>
 
 #include "i2c.h"
-
 #include "oled.h"
-#include "fonts.h"
 
 static uint8_t OLED_Buffer[OLED_WIDTH * OLED_HEIGHT / 8];
+
 OLED_t OLED;
+FontDef_t Font_8x8 = {8, 8};
 
 uint8_t OLED_Init(void)
 {
@@ -144,17 +147,18 @@ uint8_t OLED_DrawPixel(uint8_t x, uint8_t y, OLED_COLOUR colour)
 	return 0;
 }
 
-uint8_t OLED_WriteChar(uint8_t ch, FontDef Font, OLED_COLOUR colour)
+uint8_t OLED_WriteChar(uint8_t ch, OLED_COLOUR colour)
 {
-	uint16_t i, b, j;
+	uint16_t i, j;
 	uint8_t charOffset;
+	uint8_t b;
 	static uint8_t currentRow = 0;
 
 	if(OLED.CurrentX > OLED_WIDTH)
 	{
 		currentRow++;
 		OLED.CurrentX = 3;
-		OLED.CurrentY = Font.FontHeight*currentRow;
+		OLED.CurrentY = Font_8x8.FontHeight*currentRow;
 	}
 
 	if(OLED.CurrentY > OLED_HEIGHT)
@@ -164,15 +168,16 @@ uint8_t OLED_WriteChar(uint8_t ch, FontDef Font, OLED_COLOUR colour)
 		currentRow = 0;
 	}
 
-	for (i = 0; i < Font.FontHeight; i++)
+	for (i = 0; i < Font_8x8.FontHeight; i++)
 	{
 		if((charOffset = Find_Char(ch)) == 200)
 		{
 			return 1;
 		}
 
-		b = Font.data[i + Font.FontWidth*charOffset];
-		for (j = 0; j < Font.FontWidth; j++)
+		// b = Font.data[i + Font.FontWidth*charOffset];
+		b = eeprom_read_byte((uint8_t*)(i+Font_8x8.FontWidth*charOffset));
+		for (j = 0; j < Font_8x8.FontWidth; j++)
 		{
 			if ((b << j) & 0x80)
 			{
@@ -185,7 +190,7 @@ uint8_t OLED_WriteChar(uint8_t ch, FontDef Font, OLED_COLOUR colour)
 		}
 	}
 
-	OLED.CurrentX += Font.FontWidth;
+	OLED.CurrentX += Font_8x8.FontWidth;
 
 	return ch;
 }
@@ -196,7 +201,7 @@ uint8_t OLED_WriteString(const char *str)
 
 	while(str[i] != '\0')
 	{
-		OLED_WriteChar(str[i], Font_8x8, White);
+		OLED_WriteChar(str[i], White);
 		if(i > 254)
 		{
 			return 1;
@@ -218,40 +223,60 @@ uint8_t OLED_SetCursor(uint8_t x, uint8_t y)
 	return 0;
 }
 
-uint8_t OLED_PrintNum(const char *frmt, float num, ...)
+uint8_t OLED_PrintInt(int8_t val)
 {
-	char *buff[50];
-	uint8_t i;
-	float *start;
+	char s[9];
+	sprintf(s, "%d", val);
+	OLED_WriteString(s);
+	OLED_WriteString(" ");
+	return 0;
+}
 
-	// printf_P(PSTR("\ntest 1\n\n"));
+uint8_t OLED_PrintHex(int8_t val)
+{
+	char s[9];
+	sprintf(s, "%x", val);
+	OLED_WriteString("0X");
+	OLED_WriteString(s);
+	OLED_WriteString(" ");
+	return 0;
+}
 
-	start = (&num)+1;
-
-	for(i = 0; i < num; i++)
-	{
-		// printf_P(PSTR("\ntest 2\n\n"));
-		printf("test 2\n");
-		// sprintf(buff[i], frmt, (*(start+i)));
-		OLED_WriteString(buff[i]);
-	}
+uint8_t OLED_PrintFloat(float val)
+{
+	char s[9];
+	sprintf(s, "%.1f", val);
+	OLED_WriteString(s);
+	OLED_WriteString(" ");
 	return 0;
 }
 
 uint8_t Find_Char(uint8_t ch)
 {
+	//".", "/" and numbers
 	if((ch > 45) && (ch < 58))
 	{
 		return ch - 45;
 	}
+
+	//Upper Case Letters
 	else if((ch > 64) && (ch < 91))
 	{
-		return (ch-52);
+		return (ch-52); //ch - (65 - 13): the 13 off sets the pointer to skip the space '.' '.' and numbers
 	}
+
+	//Lower Case Letters(printed as lowercase)
+	else if((ch > 96) && (ch < 123))
+	{
+		return ch - 84; // ch - (97 - 13): ^^
+	}
+
+	//Space
 	else if(ch == 32)
 	{
 		return 0;
 	}
+
 	else
 	{
 		return 200;

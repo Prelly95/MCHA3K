@@ -1,16 +1,17 @@
 #ifndef _MPU6050_H_
 #define _MPU6050_H_
 
-uint8_t MPU6050_Init(void);
 void MPU6050_SetClockSource(uint8_t source);
 void MPU6050_SetFullScaleAccelRange(uint8_t range);
 void MPU6050_SetFullScaleGyroRange(uint8_t range);
 void MPU6050_SetSleepEnabled(uint8_t state);
 void MPU6050_GetAcceleration(int16_t* x, int16_t* y, int16_t* z);
-uint8_t MPU6050_GetDeviceID(void);
 void MPU6050_GetMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz);
-int16_t MPU6050_GetTemperature(void);
 void MPU6050_GetRotation(int16_t* x, int16_t* y, int16_t* z);
+void MPU6050_Balance(float* dtheta, float* theta);
+int16_t MPU6050_GetTemperature(void);
+uint8_t MPU6050_GetDeviceID(void);
+uint8_t MPU6050_Init(void);
 
 #define FALSE									0
 #define TRUE									1
@@ -390,5 +391,8 @@ void MPU6050_GetRotation(int16_t* x, int16_t* y, int16_t* z);
 #define MPU6050_DMP_MEMORY_BANKS				8
 #define MPU6050_DMP_MEMORY_BANK_SIZE			256
 #define MPU6050_DMP_MEMORY_CHUNK_SIZE			16
+
+#define GYRO_SCALE                              0.286
+#define ACCEL_SCALE                             16384.0 //puts data into "g's"
 
 #endif

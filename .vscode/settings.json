@@ -1,0 +1,26 @@
+{
+    "files.associations": {
+        "pgmspace.h": "c",
+        "stdint.h": "c",
+        "io.h": "c",
+        "twi.h": "c",
+        "cmd_line_buffer.h": "c",
+        "stdarg.h": "c",
+        "delay.h": "c",
+        "stdio.h": "c",
+        "motor.h": "c",
+        "task.h": "c",
+        "control_loop.h": "c",
+        "atomic.h": "c",
+        "kalman.h": "c",
+        "controller.h": "c",
+        "mpu6050.h": "c",
+        "cmd_parser.h": "c",
+        "inttypes.h": "c",
+        "math.h": "c",
+        "mock_sfr.h": "c",
+        "string.h": "c",
+        "oled.h": "c",
+        "eeprom.h": "c"
+    }
+}

@@ -4,6 +4,7 @@
 #include <string.h>
 #include "cmd_line_buffer.h"
 
+
 CLB_CREATE_STATIC(clb, 20);
 
 TEST_GROUP(CmdProcess);
@@ -73,10 +74,6 @@ void __wrap_cmd_parse(const char *s)
             "test\n"
             "\n"
         );        
-    }
-    else
-    {
-        __real_cmd_parse(s);
     }
 }
 

@@ -27,16 +27,15 @@ typedef struct
     char * const buffer;            // const pointer to non-const char buffer
 } CLB_T;
 
+int 			tokenise_string(const char *argv[], CLB_T *clb);
 void			clb_init(CLB_T *);
+void			clb_process(CLB_T *);
 bool			clb_is_empty(const CLB_T *);
 bool			clb_is_full(const CLB_T *);
-CLB_STATUS_T	clb_consume_char(CLB_T *, char);
-CLB_STATUS_T	clb_consume_str(CLB_T *, const char *);
 bool			clb_is_cmd_ready(const CLB_T *);
 char *			clb_gets_at(CLB_T *, CLB_INDEX_T);
 char *			clb_gets(CLB_T *);
-CLB_INDEX_T 	clb_capacity(const CLB_T *);
-void			clb_process(CLB_T *);
-int 			tokenise_string(char **argv[], CLB_T *clb);
-
+CLB_STATUS_T	clb_consume_char(CLB_T *, char);
+CLB_STATUS_T	clb_consume_str(CLB_T *, const char *);
+CLB_INDEX_T 	clb_capacity(const CLB_T *clb);
 #endif

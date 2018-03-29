@@ -3,6 +3,7 @@
 #include <avr/io.h>
 #include <util/twi.h>
 #include <avr/pgmspace.h>
+#include <math.h>
 
 #include "i2c.h"
 
@@ -13,7 +14,7 @@ uint8_t buffer[50];
 uint8_t MPU6050_Init(void)
 {
 	MPU6050_SetClockSource(MPU6050_CLOCK_PLL_XGYRO);
-	MPU6050_SetFullScaleGyroRange(MPU6050_GYRO_FS_250);
+	MPU6050_SetFullScaleGyroRange(MPU6050_GYRO_FS_2000);
 	MPU6050_SetFullScaleAccelRange(MPU6050_ACCEL_FS_2);
 	MPU6050_SetSleepEnabled(FALSE);
 
@@ -81,7 +82,20 @@ uint8_t MPU6050_GetDeviceID(void)
     return buffer[0];
 }
 
+void MPU6050_Balance(float* dtheta, float* theta)
+{
+	I2C_ReadReg(MPU6050_ADDRESS, MPU6050_RA_GYRO_XOUT_H, 2, buffer);
+    *dtheta    = (((int16_t)buffer[0]) << 8) | buffer[1];
 
+    I2C_ReadReg(MPU6050_ADDRESS, MPU6050_RA_ACCEL_YOUT_H, 4, buffer);
+	float at   = (((int16_t)buffer[0]) << 8) | buffer[1];
+    float ar   = (((int16_t)buffer[2]) << 8) | buffer[3];
+    
+    *dtheta = -((*dtheta/(float)16.4)-(float)2.072)*(float)M_PI/180;
+    *theta = -atan2(at, ar);
+}
+
+// 
 // /* Divide raw value by sensitivity scale factor */
 // 		Xa = Acc_x/16384.0;
 // 		Ya = Acc_y/16384.0;

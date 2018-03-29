@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <avr/pgmspace.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -98,18 +99,11 @@ char * clb_gets(CLB_T *clb)
     return clb_gets_at(clb, 0);
 }
 
-CLB_INDEX_T clb_capacity(const CLB_T *clb)
-{
-    return clb->size;
-}
-
 #include "cmd_parser.h"
 
 void clb_process(CLB_T *clb)
 {
     int c;
-	char** argv;
-	int argc;
 
     while ((c = getchar()) != EOF)
     {
@@ -120,10 +114,13 @@ void clb_process(CLB_T *clb)
                 clb_init(clb);
                 break;
             case CLB_CMD_READY:
-				argc = tokenise_string(&argv, clb);
-                cmd_parse(argc, (const char**)argv);
-				free(argv);
-                clb_init(clb);
+			{
+				const char* argv[32];
+				int argc;
+				argc = tokenise_string(argv, clb);
+				cmd_parse(argc, argv);
+				clb_init(clb);
+			}
             case CLB_SUCCESS:
             default:
                 break;
@@ -136,26 +133,28 @@ CLB_INDEX_T clb_capacity(const CLB_T *clb)
 	return clb->size;
 }
 
-int tokenise_string(char **argv[], CLB_T *clb)
+int tokenise_string(const char *argv[], CLB_T *clb)
 {
-	int max = (clb_capacity(clb)*sizeof(char*)/2)+1);
-	(*argv) = malloc(max);//this is the max number of words possible
+	// int max;
+	//
+	// max = ((clb_capacity(clb)*sizeof(char*)/2)+1);
+	// (*argv) = malloc(max);//this is the max number of words possible
 
-	if((*argv) != 0)
+	if((argv) != 0)
 	{
 		int count = 0;
 		char* c = clb_gets(clb);
 
-		while(c != '\0')
+		while(*c != '\0')
 		{
-			while(*c != ' ' && *c == '\0')
+			while(*c == ' ' && *c != '\0')
 			{
-				*argv[count] = '\0';
+				*c = '\0';
 				c++;
 			}
 			if(*c != '\0')
 			{
-				*argv[count] = c;
+				(argv)[count] = c;
 				count++;
 				while(*c != ' ' && *c != '\0')
 				{

@@ -10,8 +10,7 @@
 #include "cmd_line_buffer.h"
 #include "cmd_parser.h"
 #include "i2c.h"
-#include "oled.h"
-// #include "fonts.h"
+#include "mpu6050.h"
 
 CLB_CREATE_STATIC(clb, 80);
 
@@ -23,7 +22,7 @@ int main(void)
 {
     uart_init();
 	I2C_Init();
-	OLED_Init();
+	MPU6050_Init();
 
     // Enable global interrupts
     sei();
@@ -34,22 +33,15 @@ int main(void)
 	// Send initial string
 	printf_P(PSTR("\nHello world!\n\n"));
 
-	OLED_SetCursor(20, 28);
-	OLED_WriteString("HELLO WORLD");
-
-	OLED_SetCursor(5, 40);
-	OLED_WriteString("IMU ID 0X");
-
-	OLED_PrintNum("%.1f", 1, 10.0);
-
 	printf_P(PSTR("\nReady\n\n"));
 
     for(;/*ever*/;)
     {
         clb_process(&clb);
-		// MPU6050_GetAcceleration(&x, &y, &z);
-		// OLED_PrintNum(3, (float)x/1000, (float)y/1000, (float)z/1000);
-		// OLED_PrintNum(3, 1.1, 1.2, 1.3);
+		MPU6050_GetRotation(&x, &y, &z);
+		printf_P(PSTR("X: %i\t"), x);
+		printf_P(PSTR("Y: %i\t"), y);
+		printf_P(PSTR("Z: %i\n"), z);
     }
     return 0;
 }

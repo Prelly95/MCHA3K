@@ -66,6 +66,8 @@ SRC_AVR = \
 	src/i2c.c \
 	src/oled.c \
 	src/uart.c \
+	src/fonts.c \
+	src/mpu6050.c
 
 INC_COMMON = \
 	-Isrc

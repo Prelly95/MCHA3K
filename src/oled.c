@@ -4,15 +4,14 @@
 #include <avr/io.h>
 #include <util/twi.h>
 #include <avr/pgmspace.h>
-#include <avr/eeprom.h>
 
 #include "i2c.h"
 
 #include "oled.h"
+#include "fonts.h"
 
 static uint8_t OLED_Buffer[OLED_WIDTH * OLED_HEIGHT / 8];
 OLED_t OLED;
-FontDef_t Font_8x8 = {8, 8};
 
 uint8_t OLED_Init(void)
 {
@@ -145,11 +144,10 @@ uint8_t OLED_DrawPixel(uint8_t x, uint8_t y, OLED_COLOUR colour)
 	return 0;
 }
 
-uint8_t OLED_WriteChar(uint8_t ch, FontDef_t Font, OLED_COLOUR colour)
+uint8_t OLED_WriteChar(uint8_t ch, FontDef Font, OLED_COLOUR colour)
 {
-	uint16_t i, j;
+	uint16_t i, b, j;
 	uint8_t charOffset;
-	uint8_t b;
 	static uint8_t currentRow = 0;
 
 	if(OLED.CurrentX > OLED_WIDTH)
@@ -173,8 +171,7 @@ uint8_t OLED_WriteChar(uint8_t ch, FontDef_t Font, OLED_COLOUR colour)
 			return 1;
 		}
 
-		// b = Font.data[i + Font.FontWidth*charOffset];
-		b = eeprom_read_byte((uint8_t*)(i+Font.FontWidth*charOffset));
+		b = Font.data[i + Font.FontWidth*charOffset];
 		for (j = 0; j < Font.FontWidth; j++)
 		{
 			if ((b << j) & 0x80)
@@ -227,11 +224,15 @@ uint8_t OLED_PrintNum(const char *frmt, float num, ...)
 	uint8_t i;
 	float *start;
 
+	// printf_P(PSTR("\ntest 1\n\n"));
+
 	start = (&num)+1;
 
 	for(i = 0; i < num; i++)
 	{
-		sprintf(buff[i], frmt, (*(start+i)));
+		// printf_P(PSTR("\ntest 2\n\n"));
+		printf("test 2\n");
+		// sprintf(buff[i], frmt, (*(start+i)));
 		OLED_WriteString(buff[i]);
 	}
 	return 0;

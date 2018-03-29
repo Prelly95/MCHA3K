@@ -39,8 +39,3 @@ char cb_dequeue(CB_T *cb)
 		return c;
 	}
 }
-
-CB_INDEX_T cb_capacity(const CB_T *cb)
-{
-	return (cb->size - 1);
-}

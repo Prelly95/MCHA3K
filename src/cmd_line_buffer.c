@@ -2,7 +2,6 @@
 #include <avr/pgmspace.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdlib.h>
 #include "cmd_line_buffer.h"
 
 void clb_init(CLB_T *clb)
@@ -99,11 +98,6 @@ char * clb_gets(CLB_T *clb)
     return clb_gets_at(clb, 0);
 }
 
-CLB_INDEX_T clb_capacity(const CLB_T *clb)
-{
-    return clb->size;
-}
-
 #include "cmd_parser.h"
 
 void clb_process(CLB_T *clb)
@@ -125,43 +119,4 @@ void clb_process(CLB_T *clb)
                 break;
         }
     }
-}
-
-int tokenise_string(char **argv[], CLB_T *clb)
-{
-	int max = ((clb_capacity(clb)*sizeof(char*)/2)+1);
-	(*argv) = malloc(max);//this is the max number of words possible
-
-	int count;
-
-	if((*argv) != 0)
-	{
-		count = 0;
-
-		char* c = clb_gets(clb);
-
-		while(c != NULL)
-		{
-			while(*c != ' ' && *c == '\0')
-			{
-				*argv[count] = '\0';
-				c++;
-			}
-			if(*c != '\0')
-			{
-				*argv[count] = c;
-				count++;
-				while(*c != ' ' && *c != '\0')
-				{
-					c++;
-				}
-			}
-		}
-	}
-
-	else
-	{
-		return 0;
-	}
-	return count;
 }

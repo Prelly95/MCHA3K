@@ -1,5 +1,5 @@
 #include "unity_fixture.h"
-#include "stdio_redirect.h"
+#include "iospy.h"
 
 #include <string.h>
 #include "cmd_line_buffer.h"
@@ -27,7 +27,6 @@ TEST_TEAR_DOWN(CmdPot)
 
 TEST(CmdPot, GetValue)
 {
-    char out[80];
     uint16_t expected = 321; // Test value should be <= 1023
 
     if (bit_is_set(ADMUX, ADLAR))
@@ -35,15 +34,13 @@ TEST(CmdPot, GetValue)
     else
         ADCW = expected;
 
-    push_stdio();
-    fputs("pot\n",fstdin());
-    rewind(fstdin());
-    clb_process(&clb);
-    if (feof(stdin)) clearerr(stdin); // <-- Secret sauce
+    char out[80];
 
-    rewind(stdout);
-    fgets(out, sizeof(out), fstdout());
-    pop_stdio();
+    iospy_hook();
+    iospy_push_in_str("pot\n");
+    clb_process(&clb);
+    iospy_pop_out_str(out, sizeof(out));
+    iospy_unhook();
 
     TEST_ASSERT_EQUAL_STRING("Potentiometer ADC value is 321\n",out);
 }
@@ -52,15 +49,11 @@ TEST(CmdPot, UnexpectedArgument)
 {
     char out[80];
 
-    push_stdio();
-    fputs("pot 420\n",fstdin());
-    rewind(fstdin());
+    iospy_hook();
+    iospy_push_in_str("pot 420\n");
     clb_process(&clb);
-    if (feof(stdin)) clearerr(stdin); // <-- Secret sauce
-
-    rewind(stdout);
-    fgets(out, sizeof(out), fstdout());
-    pop_stdio();
+    iospy_pop_out_str(out, sizeof(out));
+    iospy_unhook();
 
     TEST_ASSERT_EQUAL_STRING("pot: invalid argument \"420\", syntax is: pot\n", out);    
 }

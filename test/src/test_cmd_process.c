@@ -1,5 +1,5 @@
 #include "unity_fixture.h"
-#include "stdio_redirect.h"
+#include "iospy.h"
 
 #include <string.h>
 #include "cmd_line_buffer.h"
@@ -15,15 +15,15 @@ TEST_SETUP(CmdProcess)
 
 TEST_TEAR_DOWN(CmdProcess)
 {
+    iospy_unhook();
 }
 
 TEST(CmdProcess, BufferEmptyAfterParse)
 {
-    push_stdio();
-    fputs("help\n",fstdin());
-    rewind(fstdin());
+    iospy_hook();
+    iospy_push_in_str("help\n");
     clb_process(&clb);
-    pop_stdio();
+    iospy_unhook();
 
     TEST_ASSERT_TRUE_MESSAGE(clb_is_empty(&clb), "Expected empty command buffer after parsing command");
 }
@@ -31,17 +31,12 @@ TEST(CmdProcess, BufferEmptyAfterParse)
 TEST(CmdProcess, InputBufferOverflow)
 {
     char out[1024];
-    memset(&out, '\0', sizeof(out));
 
-    push_stdio();
-    fputs("ABCDEFGHIJKLMNOPQRSTUVWXYZ\n",fstdin());
-    rewind(fstdin());
+    iospy_hook();
+    iospy_push_in_str("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
     clb_process(&clb);
-    if (feof(stdin)) clearerr(stdin); // <-- Secret sauce
-
-    rewind(stdout);
-    fgets(out, sizeof(out), fstdout());
-    pop_stdio();
+    iospy_pop_out_str(out, sizeof(out));
+    iospy_unhook();
 
     TEST_ASSERT_EQUAL_STRING("*** Max command length exceeded ***\n", out);
 }
@@ -50,20 +45,87 @@ TEST(CmdProcess, SilentIfIncomplete)
 {
     char out[80];
 
-    push_stdio();
-    fputs("hek\bl",fstdin());
-    fflush(fstdin());
-    rewind(fstdin());
+    iospy_hook();
+    iospy_push_in_str("hek\bl");
     clb_process(&clb);
-    if (feof(stdin)) clearerr(stdin); // <-- Secret sauce
+    size_t n = iospy_pop_out_str(out, sizeof(out));
+    iospy_unhook();
 
-    rewind(stdout);
-    char * s = fgets(out, sizeof(out), fstdout());
-    int is_eof = feof(fstdout());
-    pop_stdio();
+    TEST_ASSERT_EQUAL_UINT(0, n);
+    TEST_ASSERT_EQUAL_STRING("", out);
+}
 
-    TEST_ASSERT_EQUAL_STRING(NULL, s);
-    TEST_ASSERT_TRUE(is_eof);
+#ifdef NO_LD_WRAP
+void __wrap_cmd_parse(const char *) __asm__("_cmd_parse");
+#endif
+
+void __real_cmd_parse(const char *);
+
+void __wrap_cmd_parse(const char *s)
+{
+    if (s && !strcmp(s, "testcmd"))
+    {
+        printf(
+            "\n"
+            "This\n"
+            "is\n"
+            "a\n"
+            "test\n"
+            "\n"
+        );        
+    }
+    else
+    {
+        __real_cmd_parse(s);
+    }
+}
+
+TEST(CmdProcess, TestCmd)
+{
+    char out[80];
+
+    iospy_hook();
+    iospy_push_in_str("tek\bstcmd\n");
+    clb_process(&clb);
+    iospy_pop_out_str(out, sizeof(out));
+    iospy_unhook();
+
+    TEST_ASSERT_EQUAL_STRING("\nThis\nis\na\ntest\n\n", out);
+}
+
+TEST(CmdProcess, TestCmdTwice)
+{
+    char out1[256], out2[256];
+    
+    iospy_hook();
+
+    iospy_push_in_str("tek\bstcmd\n");
+    clb_process(&clb);
+    iospy_pop_out_str(out1, sizeof(out1));
+
+    iospy_push_in_str("testcmd\n");
+    clb_process(&clb);
+    iospy_pop_out_str(out2, sizeof(out2));
+
+    iospy_unhook();
+
+    TEST_ASSERT_EQUAL_STRING("\nThis\nis\na\ntest\n\n", out1);
+    TEST_ASSERT_EQUAL_STRING("\nThis\nis\na\ntest\n\n", out2);
+}
+
+TEST(CmdProcess, TestCmdInterrupted)
+{
+    char out[80];
+
+    iospy_hook();
+    iospy_push_in_str("tes");
+    clb_process(&clb);
+    iospy_push_in_str("tcmd\n");
+    clb_process(&clb);
+    iospy_pop_out_str(out, sizeof(out));
+    iospy_unhook();
+
+    TEST_ASSERT_EQUAL_STRING("\nThis\nis\na\ntest\n\n", out);
 }
 
 TEST_GROUP_RUNNER(CmdProcess)
@@ -71,4 +133,7 @@ TEST_GROUP_RUNNER(CmdProcess)
     RUN_TEST_CASE(CmdProcess, BufferEmptyAfterParse);
     RUN_TEST_CASE(CmdProcess, InputBufferOverflow);
     RUN_TEST_CASE(CmdProcess, SilentIfIncomplete);
+    RUN_TEST_CASE(CmdProcess, TestCmd);
+    RUN_TEST_CASE(CmdProcess, TestCmdTwice);
+    RUN_TEST_CASE(CmdProcess, TestCmdInterrupted);
 }

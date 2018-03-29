@@ -18,10 +18,10 @@ TEST_SETUP(CmdLineBuffer)
 TEST_TEAR_DOWN(CmdLineBuffer)
 {
     TEST_ASSERT_EACH_EQUAL_HEX8_MESSAGE(0xaa, &buffer[0], TEST_CLB_BUFFER_SIZE, "Data overwritten before start of buffer");
-    TEST_ASSERT_EACH_EQUAL_HEX8_MESSAGE(0xaa, &buffer[2*TEST_CLB_BUFFER_SIZE], TEST_CLB_BUFFER_SIZE, "Data overwritten before start of buffer");
+    TEST_ASSERT_EACH_EQUAL_HEX8_MESSAGE(0xaa, &buffer[2*TEST_CLB_BUFFER_SIZE], TEST_CLB_BUFFER_SIZE, "Data overwritten after end of buffer");
 }
 
-TEST(CmdLineBuffer,EmptyAfterInit)
+TEST(CmdLineBuffer, EmptyAfterInit)
 {
     TEST_ASSERT_EQUAL_UINT16(0, clb.count);
     TEST_ASSERT_TRUE(clb_is_empty(&clb));
@@ -30,7 +30,7 @@ TEST(CmdLineBuffer,EmptyAfterInit)
     TEST_ASSERT_NULL(clb_gets(&clb));
 }
 
-TEST(CmdLineBuffer,CharLF)
+TEST(CmdLineBuffer, CharLF)
 {
     TEST_ASSERT_EQUAL_HEX(CLB_SUCCESS, clb_consume_char(&clb,'A'));
     TEST_ASSERT_EQUAL_HEX(CLB_SUCCESS, clb_consume_char(&clb,'B'));
@@ -42,7 +42,7 @@ TEST(CmdLineBuffer,CharLF)
     TEST_ASSERT_EQUAL_STRING("ABC", clb_gets(&clb));
 }
 
-TEST(CmdLineBuffer,StringLF)
+TEST(CmdLineBuffer, StringLF)
 {
     const char * str = "String\n";
     TEST_ASSERT_EQUAL_HEX(CLB_CMD_READY, clb_consume_str(&clb,str));
@@ -52,7 +52,7 @@ TEST(CmdLineBuffer,StringLF)
     TEST_ASSERT_EQUAL_STRING("String", clb_gets(&clb));
 }
 
-TEST(CmdLineBuffer,StringCRLF)
+TEST(CmdLineBuffer, StringCRLF)
 {
     const char * str = "String\r\n";
     TEST_ASSERT_EQUAL_HEX(CLB_CMD_READY, clb_consume_str(&clb,str));
@@ -62,7 +62,7 @@ TEST(CmdLineBuffer,StringCRLF)
     TEST_ASSERT_EQUAL_STRING("String", clb_gets(&clb));
 }
 
-TEST(CmdLineBuffer,StringBackspace)
+TEST(CmdLineBuffer, StringBackspace)
 {
     const char * str = "SA\btB\brC\biD\bnE\bgF\bString\b\b\b\b\b\b\n";
     TEST_ASSERT_EQUAL_HEX(CLB_CMD_READY, clb_consume_str(&clb,str));
@@ -72,7 +72,7 @@ TEST(CmdLineBuffer,StringBackspace)
     TEST_ASSERT_EQUAL_STRING("String", clb_gets(&clb));
 }
 
-TEST(CmdLineBuffer,EmptyLineLF)
+TEST(CmdLineBuffer, EmptyLineLF)
 {
     const char * str = "\n";
     TEST_ASSERT_EQUAL_HEX(CLB_SUCCESS, clb_consume_str(&clb, str));
@@ -82,7 +82,7 @@ TEST(CmdLineBuffer,EmptyLineLF)
     TEST_ASSERT_NULL(clb_gets(&clb));
 }
 
-TEST(CmdLineBuffer,EmptyBackspace)
+TEST(CmdLineBuffer, EmptyBackspace)
 {
     const char * str = "Z\b\b\b\n";
     TEST_ASSERT_EQUAL_HEX(CLB_SUCCESS, clb_consume_str(&clb, str));
@@ -92,7 +92,7 @@ TEST(CmdLineBuffer,EmptyBackspace)
     TEST_ASSERT_NULL(clb_gets(&clb));
 }
 
-TEST(CmdLineBuffer,Unterminated)
+TEST(CmdLineBuffer, Unterminated)
 {
     const char * str = "String";
     TEST_ASSERT_EQUAL_HEX(CLB_SUCCESS, clb_consume_str(&clb, str));
@@ -102,7 +102,7 @@ TEST(CmdLineBuffer,Unterminated)
     TEST_ASSERT_NULL(clb_gets(&clb));
 }
 
-TEST(CmdLineBuffer,CharOverflow)
+TEST(CmdLineBuffer, CharOverflow)
 {
     for (int i = 0; i < clb.size; ++i)
     {
@@ -115,7 +115,7 @@ TEST(CmdLineBuffer,CharOverflow)
     TEST_ASSERT_NULL(clb_gets(&clb));
 }
 
-TEST(CmdLineBuffer,StringOverflow)
+TEST(CmdLineBuffer, StringOverflow)
 {
     const char * str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\n";
     TEST_ASSERT_EQUAL_HEX(CLB_BUFFER_FULL, clb_consume_str(&clb,str));

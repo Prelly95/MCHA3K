@@ -56,12 +56,12 @@ TEST(CmdProcess, SilentIfIncomplete)
 }
 
 #ifdef NO_LD_WRAP
-void __wrap_cmd_parse(char *) __asm__("_cmd_parse");
+void __wrap_cmd_parse(const char *) __asm__("_cmd_parse");
 #endif
 
-void __real_cmd_parse(char *);
+void __real_cmd_parse(const char *);
 
-void __wrap_cmd_parse(char *s)
+void __wrap_cmd_parse(const char *s)
 {
     if (s && !strcmp(s, "testcmd"))
     {

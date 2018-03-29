@@ -21,10 +21,6 @@ static void RunAllTests(void)
     RUN_TEST_GROUP(CmdXY);
     RUN_TEST_GROUP(Ctrl);
     RUN_TEST_GROUP(CmdCtrl);
-
-    /* Lab 5 */
-    RUN_TEST_GROUP(Task);
-    RUN_TEST_GROUP(SinTable);
 }
 
 int main(int argc, const char * argv[])

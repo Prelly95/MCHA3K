@@ -17,7 +17,7 @@ F_CPU = 14745600
 
 UNITY_ROOT = ../Unity
 
-TARGET_BASE = lab4
+TARGET_BASE = lab5
 TARGET_ELF = bin/$(TARGET_BASE).elf
 TARGET_HEX = bin/$(TARGET_BASE).hex
 
@@ -73,10 +73,16 @@ MATH_LIB = -lm
 LDFLAGS_AVR = $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 
 SRC_COMMON = \
+	src/led.c \
+	src/encoder.c \
+	src/potentiometer.c \
 	src/circ_buffer.c \
 	src/cmd_line_buffer.c \
 	src/cmd_parser.c \
-	src/controller.c
+	src/controller.c \
+	src/task.c \
+	src/sin_table.c \
+	src/log_data.c
 
 SRC_TEST = \
 	$(UNITY_ROOT)/src/unity.c \
@@ -85,19 +91,30 @@ SRC_TEST = \
 	mock/avr/mock_sfr.c \
 	test/src/iospy.c \
 	test/src/all_tests.c \
+	test/src/test_led.c \
+	test/src/test_encoder.c \
+	test/src/test_potentiometer.c \
 	test/src/test_circ_buffer.c \
 	test/src/test_cmd_line_buffer.c \
 	test/src/test_iospy.c \
 	test/src/test_cmd_parse.c \
 	test/src/test_cmd_process.c \
+	test/src/test_cmd_led.c \
+	test/src/test_cmd_enc.c \
+	test/src/test_cmd_pot.c \
+	test/src/test_cmd_xy.c \
 	test/src/test_controller.c \
-	test/src/test_cmd_controller.c
+	test/src/test_cmd_controller.c \
+	test/src/test_task.c \
+	test/src/test_sin_table.c
 
 SRC_AVR = \
 	$(SRC_COMMON) \
 	src/main.c \
+	src/encoder_isr.c \
 	src/uart_isr.c \
-	src/uart.c
+	src/uart.c \
+	src/task_isr.c
 
 INC_COMMON = \
 	-Isrc
@@ -114,6 +131,13 @@ INC_AVR = \
 SYMBOLS =
 
 DTREXE = ../../dtr.exe
+
+MISC_TEST = -DUNITY_FLOAT_PRECISION=0.0001f
+ifeq ($(LD_WRAP),true)
+	MISC_TEST += -Wl,-wrap,cmd_parse
+else
+	MISC_TEST += -DNO_LD_WRAP
+endif
 
 all: clean default
 

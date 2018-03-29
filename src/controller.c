@@ -7,25 +7,25 @@ static float _ctrl_output[CTRL_N_OUTPUT];
 static const float _ctrl_A[CTRL_N_STATE][CTRL_N_STATE] =
 // #include "A.def"
 {
-    #include "A.def"
+    {0.77548},
 };
 
 static const float _ctrl_B[CTRL_N_STATE][CTRL_N_INPUT] =
 // #include "B.def"
 {
-    #include "B.def"
+    {0.022717, -0.022717, -0.56511},
 };
 
 static const float _ctrl_C[CTRL_N_OUTPUT][CTRL_N_STATE] =
 // #include "C.def"
 {
-    #include "C.def"
+    {37.19}
 };
 
 static const float _ctrl_D[CTRL_N_OUTPUT][CTRL_N_INPUT] =
 // #include "D.def"
 {
-    #include "D.def"
+    {-4.7841, 4.7841, 119.01}
 };
 
 void ctrl_init(void)

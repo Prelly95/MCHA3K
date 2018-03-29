@@ -3,7 +3,7 @@
 
 enum {
     CTRL_N_INPUT  = 3, // number of reference signals and plant states
-    CTRL_N_STATE  = 2, // number of controller states
+    CTRL_N_STATE  = 1, // number of controller states
     CTRL_N_OUTPUT = 1, // number of controller outputs
 };
 

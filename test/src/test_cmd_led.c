@@ -31,7 +31,7 @@ TEST(CmdLED, GetBrightness)
     iospy_pop_out_str(out, sizeof(out));
     iospy_unhook();
 
-    TEST_ASSERT_EQUAL_STRING("LED brightness is 42\n",out);
+    TEST_ASSERT_EQUAL_STRING("LED brightness is 42\n", out);
 }
 
 TEST(CmdLED, SetBrightness)

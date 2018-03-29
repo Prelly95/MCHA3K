@@ -5,7 +5,7 @@
 void timer0_init(void)
 {
     //set timer to fast PWM Mode, prescaler to 1 and Clear OC0 on Compare Match
-    TCCR0 |= (1 << WGM00)|(1 << WGM01)|(1 << CS00)|(1 << COM01);
+    TCCR0 |= (1 << WGM00)|(1 << CS00)|(1 << COM01)|(1 << COM00);
     OCR0 = 0;
 }
 

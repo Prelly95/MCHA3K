@@ -1,34 +1,48 @@
 #include <stdint.h>
-#include <avr/io.h>
+// #include <avr/io.h>
+#include <stdio.h>
 #include <avr/interrupt.h>
+#include <avr/pgmspace.h>
 #include <util/delay.h>
 #include "led.h"
 #include "encoder.h"
 #include "potentiometer.h"
 #include "dimmer.h"
+#include "uart.h"
+#include "cmd_line_buffer.h"
+#include "cmd_parser.h"
+
+CLB_CREATE_STATIC(clb, 80);
 
 int main(void)
 {
+    // Initialise modules
     led_init();
     encoder_init();
     pot_init();
-    dimmer_init();
+    uart_init();
 
-    sei();      // Enable global interrupts
+    // Enable global interrupts
+    sei();
 
-    for (;;)
+    // Wait a second at startup
+    // _delay_ms(1000);
+    _delay_ms(200); led_on();
+    _delay_ms(200); led_off();
+    _delay_ms(200); led_on();
+    _delay_ms(200); led_off();
+    _delay_ms(200); led_on();
+
+    // Send initial string
+    printf_P(PSTR("\nHello world!\n\n"));
+
+    for(;/*ever*/;)
     {
-        // Read potentiometer value and set dimmer step
-        uint8_t step = ((DIMMER_MAX_STEP - DIMMER_MIN_STEP)*pot_get_value())/POT_FULL_SCALE
-        + DIMMER_MIN_STEP;
-        dimmer_set_step(step);
-        // Process pending encoder increments
-        int32_t count = encoder_pop_count();
-        dimmer_change(count);
-        // Update LED brightness
-        uint8_t brightness = dimmer_get_brightness();
-        led_set_brightness(brightness);
-    }
+        // Do some pretend processing (do not remove delays)
+        // _delay_ms(125); led_on();
+        // _delay_ms(125); led_off();
 
+        clb_process(&clb);
+    }
     return 0;
 }

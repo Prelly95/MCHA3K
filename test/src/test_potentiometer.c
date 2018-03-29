@@ -10,10 +10,12 @@ TEST_GROUP(Potentiometer);
 TEST_SETUP(Potentiometer)
 {
     pot_init();
+    ADCSRA |= _BV(ADIF);        // Set conversion complete flag so any ADIF polling falls through
 }
 
 TEST_TEAR_DOWN(Potentiometer)
 {
+    ADCSRA &= ~(_BV(ADIF));     // Clear conversion complete flag after reading
     ADCW = 0;
 }
 
@@ -34,10 +36,8 @@ TEST(Potentiometer, GetValueFromADC)
         ADCW = expected << 6;
     else
         ADCW = expected;
-
-    ADCSRA |= _BV(ADIF);        // Set conversion complete flag so any ADIF polling falls through
+    
     uint16_t actual = pot_get_value();
-    ADCSRA &= ~(_BV(ADIF));     // Clear conversion complete flag after reading
 
     TEST_ASSERT_EQUAL_UINT16(expected, actual);
 }
